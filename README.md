@@ -153,6 +153,9 @@ return `<iframe src="..."></iframe>`
 
 // This is not ok ❌
 return `<blockquote>...</blockquote><a href="...">...</a>`
+
+// But this would be ok ✅
+return `<div><blockquote>...</blockquote><a href="...">...</a></div>`
 ```
 
 Some services have endpoints that you can use to get the embed HTML
