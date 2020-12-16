@@ -39,7 +39,7 @@ rest.
 - [Installation](#installation)
 - [Usage](#usage)
   - [Options](#options)
-- [Configuration](#configuration)
+  - [Configuration](#configuration)
 - [Inspiration](#inspiration)
 - [Other Solutions](#other-solutions)
 - [Issues](#issues)
@@ -177,7 +177,7 @@ Also, while technically we treat the cache as a `Map`, all we really care about
 is that the cache has a `get` and a `set` and we `await` both of those calls to
 support async caches (like gatsby's).
 
-## Configuration
+### Configuration
 
 You can provide configuration for your transformer by specifying the transformer
 as an array. This may not seem very relevant if you're creating your own custom
