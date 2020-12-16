@@ -1,7 +1,7 @@
 {
   "name": "@remark-embedder/core",
   "version": "0.0.0-semantically-released",
-  "description": "Remark plugin to embed well known services by their URL.",
+  "description": "Remark plugin to convert URLs to embed code in markdown.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [],

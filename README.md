@@ -1,7 +1,7 @@
 <div align="center">
 <h1>@remark-embedder/core</h1>
 
-<p>Remark plugin to embed well known services by their URL.</p>
+<p>Remark plugin to convert URLs to embed code in markdown.</p>
 </div>
 
 ---
