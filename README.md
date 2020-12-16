@@ -319,11 +319,11 @@ MIT
 [build]: https://github.com/remark-embedder/core/actions?query=workflow%3Avalidate
 [coverage-badge]: https://img.shields.io/codecov/c/github/remark-embedder/core.svg?style=flat-square
 [coverage]: https://codecov.io/github/remark-embedder/core
-[version-badge]: https://img.shields.io/npm/v/remark-embedder-core.svg?style=flat-square
-[package]: https://www.npmjs.com/package/remark-embedder-core
-[downloads-badge]: https://img.shields.io/npm/dm/remark-embedder-core.svg?style=flat-square
-[npmtrends]: https://www.npmtrends.com/remark-embedder-core
-[license-badge]: https://img.shields.io/npm/l/remark-embedder-core.svg?style=flat-square
+[version-badge]: https://img.shields.io/npm/v/@remark-embedder/core.svg?style=flat-square
+[package]: https://www.npmjs.com/package/@remark-embedder/core
+[downloads-badge]: https://img.shields.io/npm/dm/@remark-embedder/core.svg?style=flat-square
+[npmtrends]: https://www.npmtrends.com/@remark-embedder/core
+[license-badge]: https://img.shields.io/npm/l/@remark-embedder/core.svg?style=flat-square
 [license]: https://github.com/remark-embedder/core/blob/main/LICENSE
 [prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
 [prs]: https://makeapullrequest.com
