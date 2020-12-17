@@ -40,6 +40,7 @@ rest.
 - [Usage](#usage)
   - [Options](#options)
   - [Configuration](#configuration)
+- [Making a transformer module](#making-a-transformer-module)
 - [Inspiration](#inspiration)
 - [Other Solutions](#other-solutions)
 - [Issues](#issues)
@@ -72,6 +73,7 @@ import remarkEmbedder from '@remark-embedder/core'
 
 const codesandboxTransformer = {
   name: 'Codesandbox',
+  // shouldTransform can also be async
   shouldTransform(url) {
     const {host, pathname} = new URL(url)
     return (
@@ -124,7 +126,7 @@ messages. I suggest you use your module name if you're publishing this
 transformer as a package so people know where to open issues if there's a
 problem.
 
-##### `shouldTransform: (url: string) => boolean`
+##### `shouldTransform: (url: string) => boolean | Promise<boolean>`
 
 Only URLs on their own line will be transformed, but for your transformer to be
 called, you must first determine whether a given URL should be transformed by
@@ -140,7 +142,7 @@ lot like the kind of URL that you would handle, but is missing important
 information and you're confident that's a mistake, you could log helpful
 information using `console.log`.
 
-##### `getHTML: (url: string, config: unknown) => Promise<string | null> | string | null`
+##### `getHTML: (url: string, config: unknown) => string | null | Promise<string | null>`
 
 The `getHTML` function accepts the `url` string and a config option (learn more
 from the `services` option). It returns a string of HTML or a promise that
@@ -254,6 +256,38 @@ const result = await remark()
 This pattern inverts control for folks who like what your transform does, but
 want to modify it slightly. If written like above (`return config(...)`) it
 could even allow the config function to be `async`.
+
+## Making a transformer module
+
+Here's what our simple example would look like as a transformer module:
+
+```typescript
+import type {Transformer} from '@remark-embedder/core'
+
+const transformer: Transformer = {
+  // this should be the name of your module:
+  name: '@remark-embedder/transformer-codesandbox',
+  shouldTransform(url) {
+    // do your thing and return true/false
+    return false
+  },
+  getHTML(url) {
+    // do your thing and return the HTML
+    return '<iframe>...</iframe>'
+  },
+}
+
+export default transformer
+```
+
+If you're not using TypeScript, simply remove the `type` import and the
+`: Transformer` bit.
+
+If you're using CommonJS, then you'd also swap `export default transformer` for
+`module.exports = transformer`
+
+NOTE: If you're using `export default` then CommonJS consumers will need to add
+a `.default` to get your transformer with `require`.
 
 ## Inspiration
 

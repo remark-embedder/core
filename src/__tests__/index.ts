@@ -1,5 +1,5 @@
 import remark from 'remark'
-import html from 'remark-html'
+import remarkHTML from 'remark-html'
 import remarkEmbedder from '../'
 import type {Transformer} from '../'
 
@@ -22,7 +22,7 @@ test('smoke test', async () => {
   const transformer = getTransformer()
   const result = await remark()
     .use(remarkEmbedder, {transformers: [transformer]})
-    .use(html)
+    .use(remarkHTML)
     .process(
       `
 This is a great site:
@@ -41,7 +41,7 @@ test('works with same name as link links', async () => {
   const transformer = getTransformer()
   const result = await remark()
     .use(remarkEmbedder, {transformers: [transformer]})
-    .use(html)
+    .use(remarkHTML)
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -55,7 +55,7 @@ test('requests are cached', async () => {
   const getHTMLMock = transformer.getHTML as jest.Mock
   await remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(html)
+    .use(remarkHTML)
     .process('https://some-site.com')
 
   expect(getHTMLMock).toHaveBeenCalledTimes(1)
@@ -63,7 +63,7 @@ test('requests are cached', async () => {
 
   await remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(html)
+    .use(remarkHTML)
     .process('https://some-site.com')
 
   expect(getHTMLMock).not.toHaveBeenCalled()
@@ -74,7 +74,7 @@ test(`does nothing with markdown that doesn't match`, async () => {
   const transformer = getTransformer()
   const result = await remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(html)
+    .use(remarkHTML)
     .process(
       `
 # This is
@@ -117,7 +117,7 @@ test('error messages are handy', async () => {
         },
       ],
     })
-    .use(html)
+    .use(remarkHTML)
     .process(`https://some-site.com/error`)
     .catch(e => e)
 
@@ -139,7 +139,7 @@ test('transformers can change their mind by returning null', async () => {
         },
       ],
     })
-    .use(html)
+    .use(remarkHTML)
     .process('https://some-site.com/no-change')
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -154,13 +154,36 @@ test('transformers can be configured', async () => {
     .use(remarkEmbedder, {
       transformers: [[transformer, config]],
     })
-    .use(html)
+    .use(remarkHTML)
     .process('some-site.com/config')
 
   expect(transformer.getHTML).toHaveBeenCalledWith(
     'https://some-site.com/config',
     config,
   )
+})
+
+test('shouldTransform can be async', async () => {
+  const transformer = getTransformer({
+    shouldTransform: jest.fn(url =>
+      Promise.resolve(url.endsWith('transform-me')),
+    ),
+    getHTML: () => `<div>It changed!</div>`,
+  })
+  const result = await remark()
+    .use(remarkEmbedder, {
+      transformers: [transformer],
+    })
+    .use(remarkHTML).process(`
+https://some-site.com/transform-me
+
+https://some-site.com/do-not-transform
+`)
+
+  expect(result.toString()).toMatchInlineSnapshot(`
+    <div>It changed!</div>
+    <p>https://some-site.com/do-not-transform</p>
+  `)
 })
 
 // no idea why TS and remark aren't getting along here,

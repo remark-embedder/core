@@ -6,7 +6,7 @@ import visit from 'unist-util-visit'
 type GottenHTML = string | null
 type Transformer = {
   getHTML: (url: string, config?: unknown) => Promise<GottenHTML> | GottenHTML
-  shouldTransform: (url: string) => boolean
+  shouldTransform: (url: string) => Promise<boolean> | boolean
   name: string
 }
 
@@ -41,15 +41,17 @@ const getUrlString = (url: string): string | null => {
 
 function remarkEmbedder({transformers, cache}: RemarkEmbedderOptions) {
   // convert the array of transformers to one with both the transformer and the config tuple
-  const transformersAndConfig: Array<
-    [Transformer, TransformerConfig | undefined]
-  > = transformers.map(t => {
-    if (Array.isArray(t)) return t
-    else return [t, undefined]
+  const transformersAndConfig: Array<{
+    transformer: Transformer
+    config?: TransformerConfig
+  }> = transformers.map(t => {
+    if (Array.isArray(t)) return {transformer: t[0], config: t[1]}
+    else return {transformer: t}
   })
 
   return async function remarkEmbedderBase(tree: Node) {
-    const transformations: Array<() => Promise<void>> = []
+    const nodeAndURL: Array<{parentNode: Parent; url: string}> = []
+
     visit(tree, 'paragraph', (paragraphNode: Parent) => {
       if (paragraphNode.children.length !== 1) {
         return
@@ -74,47 +76,59 @@ function remarkEmbedder({transformers, cache}: RemarkEmbedderOptions) {
       if (!urlString) {
         return
       }
-
-      for (const transformerAndConfig of transformersAndConfig) {
-        const [{shouldTransform, getHTML, name}, config] = transformerAndConfig
-        if (!shouldTransform(urlString)) {
-          continue
-        }
-
-        transformations.push(async () => {
-          try {
-            const cacheKey = `remark-embedder:${name}:${urlString}`
-            let html: GottenHTML | undefined = await cache?.get(cacheKey)
-
-            if (!html) {
-              html = await getHTML(urlString, config)
-              await cache?.set(cacheKey, html)
-            }
-
-            // if nothing's returned from getHTML, then no modifications are needed
-            if (!html) return
-
-            // convert the HTML string into an AST
-            const htmlElement = htmlToHast(html)
-
-            // set the paragraphNode.data with the necessary properties
-            paragraphNode.data = {
-              hName: htmlElement.tagName,
-              hProperties: htmlElement.properties,
-              hChildren: htmlElement.children,
-            }
-          } catch (e: unknown) {
-            // https://github.com/microsoft/TypeScript/issues/20024#issuecomment-344511199
-            const error = e as Error
-            error.message = `The following error occurred while processing \`${urlString}\` with the remark-embedder transformer \`${name}\`:\n\n${error.message}`
-
-            throw error
-          }
-        })
-      }
+      nodeAndURL.push({parentNode: paragraphNode, url: urlString})
     })
 
-    await Promise.all(transformations.map(t => t()))
+    const nodesToTransform: Array<
+      typeof nodeAndURL[0] & typeof transformersAndConfig[0]
+    > = []
+
+    for (const node of nodeAndURL) {
+      for (const transformerAndConfig of transformersAndConfig) {
+        // we need to make sure this is completed in sequence
+        // because the order matters
+        // eslint-disable-next-line no-await-in-loop
+        if (await transformerAndConfig.transformer.shouldTransform(node.url)) {
+          nodesToTransform.push({...node, ...transformerAndConfig})
+          break
+        }
+      }
+    }
+
+    const promises = nodesToTransform.map(
+      async ({parentNode, url, transformer, config}) => {
+        try {
+          const cacheKey = `remark-embedder:${transformer.name}:${url}`
+          let html: GottenHTML | undefined = await cache?.get(cacheKey)
+
+          if (!html) {
+            html = await transformer.getHTML(url, config)
+            await cache?.set(cacheKey, html)
+          }
+
+          // if nothing's returned from getHTML, then no modifications are needed
+          if (!html) return
+
+          // convert the HTML string into an AST
+          const htmlElement = htmlToHast(html)
+
+          // set the parentNode.data with the necessary properties
+          parentNode.data = {
+            hName: htmlElement.tagName,
+            hProperties: htmlElement.properties,
+            hChildren: htmlElement.children,
+          }
+        } catch (e: unknown) {
+          // https://github.com/microsoft/TypeScript/issues/20024#issuecomment-344511199
+          const error = e as Error
+          error.message = `The following error occurred while processing \`${url}\` with the remark-embedder transformer \`${transformer.name}\`:\n\n${error.message}`
+
+          throw error
+        }
+      },
+    )
+
+    await Promise.all(promises)
 
     return tree
   }
