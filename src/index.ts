@@ -39,12 +39,7 @@ const getUrlString = (url: string): string | null => {
   }
 }
 
-const defaultCache = new Map<string, GottenHTML>()
-
-function remarkEmbedder({
-  transformers,
-  cache = defaultCache,
-}: RemarkEmbedderOptions) {
+function remarkEmbedder({transformers, cache}: RemarkEmbedderOptions) {
   // convert the array of transformers to one with both the transformer and the config tuple
   const transformersAndConfig: Array<
     [Transformer, TransformerConfig | undefined]
@@ -88,12 +83,12 @@ function remarkEmbedder({
 
         transformations.push(async () => {
           try {
-            const cacheKey = `remark-embedder:${urlString}`
-            let html: GottenHTML | undefined = await cache.get(cacheKey)
+            const cacheKey = `remark-embedder:${name}:${urlString}`
+            let html: GottenHTML | undefined = await cache?.get(cacheKey)
 
             if (!html) {
               html = await getHTML(urlString, config)
-              await cache.set(cacheKey, html)
+              await cache?.set(cacheKey, html)
             }
 
             // if nothing's returned from getHTML, then no modifications are needed

@@ -165,13 +165,14 @@ Some services have endpoints that you can use to get the embed HTML
 #### `cache: Map<string, string | null>`
 
 Because some of your transforms may make network requests to retrieve the HTML,
-we support providing a `cache`. There's a built-in cache, but right now it's
-just in-memory. If you want to persist this to the file system (so it works
+we support providing a `cache`. You could pass `new Map()`, but that would only
+be useful during the life of your process (which means it probably wouldn't be
+all that helpful). If you want to persist this to the file system (so it works
 across compilations), you could use something like
 [lowdb](https://github.com/typicode/lowdb).
 
-The cache key is set to `remark-embedder:${urlString}` and the value is the
-resulting HTML.
+The cache key is set to `remark-embedder:${transformerName}:${urlString}` and
+the value is the resulting HTML.
 
 Also, while technically we treat the cache as a `Map`, all we really care about
 is that the cache has a `get` and a `set` and we `await` both of those calls to
