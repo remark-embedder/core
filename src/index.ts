@@ -6,7 +6,7 @@ import visit from 'unist-util-visit'
 type GottenHTML = string | null
 type TransformerConfig<Type = unknown> = Type
 
-type Transformer<ConfigType> = {
+type Transformer<ConfigType = unknown> = {
   getHTML: (
     url: string,
     config?: TransformerConfig<ConfigType>,
