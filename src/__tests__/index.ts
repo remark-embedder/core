@@ -11,7 +11,9 @@ const unquoteSerializer = {
 
 expect.addSnapshotSerializer(unquoteSerializer)
 
-const getTransformer = (overrides: Partial<Transformer> = {}): Transformer => ({
+const getTransformer = <ConfigType>(
+  overrides: Partial<Transformer<ConfigType>> = {},
+): Transformer<ConfigType> => ({
   name: 'TEST',
   shouldTransform: jest.fn(url => url.startsWith('https://some-site.com')),
   getHTML: jest.fn(url => `<iframe src="${url}"></iframe>`),
@@ -148,11 +150,23 @@ test('transformers can change their mind by returning null', async () => {
 })
 
 test('transformers can be configured', async () => {
-  const transformer = getTransformer()
-  const config = {some: 'config'}
+  type TConfig = (url: string) => {some: string}
+
+  // the default config thing is here to help test the types...
+  const getDefaultConfig = () => ({some: 'defaultConfig'})
+  const transformer: Transformer<TConfig> = {
+    name: 'TEST',
+    shouldTransform: () => true,
+    getHTML: jest.fn(
+      (url, config = getDefaultConfig) =>
+        `<div>${config(url).some} for ${url}</div>`,
+    ),
+  }
+
+  const config = () => ({some: 'config'})
   await remark()
     .use(remarkEmbedder, {
-      transformers: [[transformer, config]],
+      transformers: [[transformer, config as TConfig]],
     })
     .use(remarkHTML)
     .process('some-site.com/config')

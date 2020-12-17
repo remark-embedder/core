@@ -264,20 +264,26 @@ Here's what our simple example would look like as a transformer module:
 ```typescript
 import type {Transformer} from '@remark-embedder/core'
 
-const transformer: Transformer = {
+type Config = (url: string) => {height: string}
+const getDefaultConfig = () => ({some: 'defaultConfig'})
+
+const transformer: Transformer<Config> = {
   // this should be the name of your module:
   name: '@remark-embedder/transformer-codesandbox',
   shouldTransform(url) {
     // do your thing and return true/false
     return false
   },
-  getHTML(url) {
+  getHTML(url, getConfig = getDefaultConfig) {
+    // get the config...
+    const config = getConfig(url)
     // do your thing and return the HTML
     return '<iframe>...</iframe>'
   },
 }
 
 export default transformer
+export type {Config}
 ```
 
 If you're not using TypeScript, simply remove the `type` import and the
@@ -288,6 +294,22 @@ If you're using CommonJS, then you'd also swap `export default transformer` for
 
 NOTE: If you're using `export default` then CommonJS consumers will need to add
 a `.default` to get your transformer with `require`.
+
+To take advantage of the config type you export, the user of your transform
+would need to cast their config when running it through remark. For example:
+
+```typescript
+// ...
+import type {Config as CodesandboxConfig} from '@remark-embedder/transformer-codesandbox'
+import transformer from '@remark-embedder/transformer-codesandbox'
+
+// ...
+
+remark().use(remarkEmbedder, {
+  transformers: [codesandboxTransformer, config as CodesandboxConfig],
+})
+// ...
+```
 
 ## Inspiration
 

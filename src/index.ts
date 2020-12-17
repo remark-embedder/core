@@ -4,13 +4,16 @@ import fromParse5 from 'hast-util-from-parse5'
 import visit from 'unist-util-visit'
 
 type GottenHTML = string | null
-type Transformer = {
-  getHTML: (url: string, config?: unknown) => Promise<GottenHTML> | GottenHTML
+type TransformerConfig<Type = unknown> = Type
+
+type Transformer<ConfigType> = {
+  getHTML: (
+    url: string,
+    config?: TransformerConfig<ConfigType>,
+  ) => Promise<GottenHTML> | GottenHTML
   shouldTransform: (url: string) => Promise<boolean> | boolean
   name: string
 }
-
-type TransformerConfig = unknown
 
 type RemarkEmbedderOptions = {
   cache?:
@@ -21,7 +24,7 @@ type RemarkEmbedderOptions = {
         set(key: string, value: GottenHTML): Promise<void>
         [key: string]: unknown
       }
-  transformers: Array<[Transformer, TransformerConfig] | Transformer>
+  transformers: Array<[Transformer<any>, TransformerConfig] | Transformer<any>>
 }
 
 // results in an AST node of type "root" with a single "children" node of type "element"
@@ -42,7 +45,7 @@ const getUrlString = (url: string): string | null => {
 function remarkEmbedder({transformers, cache}: RemarkEmbedderOptions) {
   // convert the array of transformers to one with both the transformer and the config tuple
   const transformersAndConfig: Array<{
-    transformer: Transformer
+    transformer: Transformer<unknown>
     config?: TransformerConfig
   }> = transformers.map(t => {
     if (Array.isArray(t)) return {transformer: t[0], config: t[1]}
@@ -139,5 +142,5 @@ export type {Transformer, RemarkEmbedderOptions}
 
 /*
 eslint
-  no-continue: "off",
+  @typescript-eslint/no-explicit-any: "off",
 */
