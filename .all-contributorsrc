@@ -34,6 +34,15 @@
         "doc",
         "test"
       ]
+    },
+    {
+      "login": "johnstonmatt",
+      "name": "Matt Johnston",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/5455542?v=4",
+      "profile": "https://github.com/johnstonmatt",
+      "contributions": [
+        "doc"
+      ]
     }
   ]
 }
