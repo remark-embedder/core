@@ -116,6 +116,10 @@ but there are a few optional options as well.
 
 #### `transformers: Array<Transformer>`
 
+**Take a look at
+[`@remark-embedder/transformer-oembed`](https://github.com/remark-embedder/transformer-oembed)**
+which should cover you for most things you'll want to convert to embeds.
+
 The transformer objects are where you convert a link to it's HTML embed
 representation.
 
@@ -166,19 +170,24 @@ Some services have endpoints that you can use to get the embed HTML
 
 #### `cache: Map<string, string | null>`
 
+**You'll mostly likely want to use
+[`@remark-embedder/cache`](https://github.com/remark-embedder/cache)**
+
 Because some of your transforms may make network requests to retrieve the HTML,
 we support providing a `cache`. You could pass `new Map()`, but that would only
 be useful during the life of your process (which means it probably wouldn't be
-all that helpful). If you want to persist this to the file system (so it works
-across compilations), you could use something like
-[lowdb](https://github.com/typicode/lowdb).
+all that helpful). You'll want to make sure to persist this to the file system
+(so it works across compilations), which is why you should probably use
+[`@remark-embedder/cache`](https://github.com/remark-embedder/cache).
 
 The cache key is set to `remark-embedder:${transformerName}:${urlString}` and
 the value is the resulting HTML.
 
 Also, while technically we treat the cache as a `Map`, all we really care about
 is that the cache has a `get` and a `set` and we `await` both of those calls to
-support async caches (like gatsby's).
+support async caches (like
+[`@remark-embedder/cache`](https://github.com/remark-embedder/cache) or gatsby's
+built-in plugin cache).
 
 ### Configuration
 
