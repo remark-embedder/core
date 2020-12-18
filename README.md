@@ -28,7 +28,7 @@ me.
 
 This allows you to transform a link in your markdown into the embedded version
 of that link. It's a [remark](https://remark.js.org/) plugin (the de-facto
-standard markdown parser). You provide a "transformer" the the plugin does the
+standard markdown parser). You provide a "transformer" the plugin does the
 rest.
 
 ## Table of Contents
