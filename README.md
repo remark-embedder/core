@@ -27,9 +27,8 @@ me.
 ## This solution
 
 This allows you to transform a link in your markdown into the embedded version
-of that link. It's a [remark](https://remark.js.org/) plugin (the de-facto
-standard markdown parser). You provide a "transformer" the plugin does the
-rest.
+of that link. It's a [remark][remark] plugin (the de-facto standard markdown
+parser). You provide a "transformer" the plugin does the rest.
 
 ## Table of Contents
 
@@ -57,7 +56,7 @@ This module is distributed via [npm][npm] which is bundled with [node][node] and
 should be installed as one of your project's `dependencies`:
 
 ```
-npm install --save @remark-embedder/core
+npm install @remark-embedder/core
 ```
 
 ## Usage
@@ -65,17 +64,18 @@ npm install --save @remark-embedder/core
 Here's the most complete, simplest, practical example I can offer:
 
 ```javascript
-import remark from 'remark'
-import html from 'remark-html'
 import remarkEmbedder from '@remark-embedder/core'
 // or, if you're using CJS:
 // const {default: remarkEmbedder} = require('@remark-embedder/core')
+import remark from 'remark'
+import html from 'remark-html'
 
-const codesandboxTransformer = {
-  name: 'Codesandbox',
+const CodeSandboxTransformer = {
+  name: 'CodeSandbox',
   // shouldTransform can also be async
   shouldTransform(url) {
     const {host, pathname} = new URL(url)
+
     return (
       ['codesandbox.io', 'www.codesandbox.io'].includes(host) &&
       pathname.includes('/s/')
@@ -84,12 +84,13 @@ const codesandboxTransformer = {
   // getHTML can also be async
   getHTML(url) {
     const iframeUrl = url.replace('/s/', '/embed/')
+
     return `<iframe src="${iframeUrl}" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking" sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"></iframe>`
   },
 }
 
 const exampleMarkdown = `
-This is a codesandbox:
+This is a CodeSandbox:
 
 https://codesandbox.io/s/css-variables-vs-themeprovider-df90h
 `
@@ -97,14 +98,14 @@ https://codesandbox.io/s/css-variables-vs-themeprovider-df90h
 async function go() {
   const result = await remark()
     .use(remarkEmbedder, {
-      transformers: [codesandboxTransformer],
+      transformers: [CodeSandboxTransformer],
     })
     .use(html)
     .process(exampleMarkdown)
 
   console.log(result.toString())
   // logs:
-  // <p>This is a codesandbox:</p>
+  // <p>This is a CodeSandbox:</p>
   // <iframe src="https://codesandbox.io/embed/css-variables-vs-themeprovider-df90h" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking" sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"></iframe>
 }
 ```
@@ -114,10 +115,10 @@ async function go() {
 The `transformers` option is required (otherwise the plugin won't do anything),
 but there are a few optional options as well.
 
-#### `transformers: Array<Transformer>`
+#### `transformers: Array<Transformer | [Transformer, unknown]>`
 
 **Take a look at
-[`@remark-embedder/transformer-oembed`](https://github.com/remark-embedder/transformer-oembed)**
+[`@remark-embedder/transformer-oembed`][@remark-embedder/transformer-oembed]**
 which should cover you for most things you'll want to convert to embeds.
 
 The transformer objects are where you convert a link to it's HTML embed
@@ -146,7 +147,7 @@ lot like the kind of URL that you would handle, but is missing important
 information and you're confident that's a mistake, you could log helpful
 information using `console.log`.
 
-##### `getHTML: (url: string, config: unknown) => string | null | Promise<string | null>`
+##### `getHTML: (url: string, config?: unknown) => string | null | Promise<string | null>`
 
 The `getHTML` function accepts the `url` string and a config option (learn more
 from the `services` option). It returns a string of HTML or a promise that
@@ -165,29 +166,28 @@ return `<blockquote>...</blockquote><a href="...">...</a>`
 return `<div><blockquote>...</blockquote><a href="...">...</a></div>`
 ```
 
-Some services have endpoints that you can use to get the embed HTML
-([like twitter for example](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/post-and-engage/api-reference/get-statuses-oembed)).
+Some services have endpoints that you can use to get the embed HTML ([like
+twitter for example][twitter-oembed-docs]).
 
 #### `cache: Map<string, string | null>`
 
 **You'll mostly likely want to use
-[`@remark-embedder/cache`](https://github.com/remark-embedder/cache)**
+[`@remark-embedder/cache`][@remark-embedder/cache]**
 
 Because some of your transforms may make network requests to retrieve the HTML,
 we support providing a `cache`. You could pass `new Map()`, but that would only
 be useful during the life of your process (which means it probably wouldn't be
 all that helpful). You'll want to make sure to persist this to the file system
 (so it works across compilations), which is why you should probably use
-[`@remark-embedder/cache`](https://github.com/remark-embedder/cache).
+[`@remark-embedder/cache`][@remark-embedder/cache].
 
 The cache key is set to `remark-embedder:${transformerName}:${urlString}` and
 the value is the resulting HTML.
 
 Also, while technically we treat the cache as a `Map`, all we really care about
 is that the cache has a `get` and a `set` and we `await` both of those calls to
-support async caches (like
-[`@remark-embedder/cache`](https://github.com/remark-embedder/cache) or gatsby's
-built-in plugin cache).
+support async caches (like [`@remark-embedder/cache`][@remark-embedder/cache] or
+[Gatsby's built-in plugin cache][gatsby-plugin-cache-source]).
 
 ### Configuration
 
@@ -197,28 +197,28 @@ transformer where you can simply edit the code directly, but if the transformer
 is published to `npm` then allowing users to configure your transformer
 externally can be quite useful (especially if your transformer requires an API
 token to request the embed information like with
-[instagram](https://developers.facebook.com/docs/instagram/oembed/)).
+[instagram][instagram-oembed-docs]).
 
 Here's a simple example:
 
 ```javascript
-const codesandboxTransformer = {
-  name: 'Codesandbox',
+const CodeSandboxTransformer = {
+  name: 'CodeSandbox',
   shouldTransform(url) {
     // ...
   },
   getHTML(url, config) {
-    // ... config(url).height === '600px'
+    // ...
   },
 }
 
-const getCodesandboxConfig = url => ({height: '600px'})
+const getCodeSandboxConfig = url => ({height: '600px'})
 
 const result = await remark()
   .use(remarkEmbedder, {
     transformers: [
       someUnconfiguredTransformer, // remember, not all transforms need/accept configuration
-      [codesandboxTransformer, getCodesandboxConfig],
+      [codesandboxTransformer, getCodeSandboxConfig],
     ],
   })
   .use(html)
@@ -232,8 +232,8 @@ most flexibility for folks to configure the transform. In fact, I think a good
 pattern could be something like the following:
 
 ```javascript
-const codesandboxTransformer = {
-  name: 'Codesandbox',
+const CodeSandboxTransformer = {
+  name: 'CodeSandbox',
   shouldTransform(url) {
     // ...
   },
@@ -244,18 +244,14 @@ const codesandboxTransformer = {
   },
 }
 
-const getCodesandboxConfig = ({url, html}) => {
-  if (hasSomeSpecialQueryParam(url)) {
-    return modifyHTMLBasedOnQueryParam(html)
-  }
-  return html
-}
+const getCodeSandboxConfig = ({url, html}) =>
+  hasSomeSpecialQueryParam(url) ? modifyHTMLBasedOnQueryParam(html) : html
 
 const result = await remark()
   .use(remarkEmbedder, {
     transformers: [
       someUnconfiguredTransformer, // remember, not all transforms need/accept configuration
-      [codesandboxTransformer, getCodesandboxConfig],
+      [CodeSandboxTransformer, getCodeSandboxConfig],
     ],
   })
   .use(html)
@@ -309,8 +305,8 @@ would need to cast their config when running it through remark. For example:
 
 ```typescript
 // ...
-import type {Config as CodesandboxConfig} from '@remark-embedder/transformer-codesandbox'
 import transformer from '@remark-embedder/transformer-codesandbox'
+import type {Config as CodesandboxConfig} from '@remark-embedder/transformer-codesandbox'
 
 // ...
 
@@ -322,17 +318,16 @@ remark().use(remarkEmbedder, {
 
 ## Inspiration
 
-This whole plugin was extracted out of
-[Kent C. Dodds' Gatsby website](https://github.com/kentcdodds/kentcdodds.com/blob/f114842e40b22d38b726f0a7fdaf8c21937eb2cc/plugins/remark-embedder/index.js)
-into `gatsby-remark-embedder` by
-[Michaël De Boey](https://github.com/MichaelDeBoey) and then Kent extracted the
-remark plugin into this core package.
+This whole plugin was extracted out of [Kent C. Dodds' Gatsby
+website][kentcdodds.com-remark-embedder-plugin] into
+[`gatsby-remark-embedder`][gatsby-remark-embedder] by [Michaël De
+Boey][michaeldeboey] and then [Kent][kentcdodds] extracted the remark plugin
+into this core package.
 
 ## Other Solutions
 
-- [MDX Embed](https://www.mdx-embed.com): Allows you to use components in MDX
-  files for common services. A pretty different approach to solving a similar
-  problem.
+- [MDX Embed][mdx-embed]: Allows you to use components in MDX files for common
+  services. A pretty different approach to solving a similar problem.
 
 ## Issues
 
@@ -369,6 +364,7 @@ Thanks goes to these people ([emoji key][emojis]):
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors][all-contributors] specification.
@@ -401,4 +397,16 @@ MIT
 [bugs]: https://github.com/remark-embedder/core/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Acreated-desc+label%3Abug
 [requests]: https://github.com/remark-embedder/core/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3Aenhancement
 [good-first-issue]: https://github.com/remark-embedder/core/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3Aenhancement+label%3A%22good+first+issue%22
+
+[@remark-embedder/cache]: https://github.com/remark-embedder/cache
+[@remark-embedder/transformer-oembed]: https://github.com/remark-embedder/transformer-oembed
+[gatsby-plugin-cache-source]: https://github.com/gatsbyjs/gatsby/blob/0a06a795c434312150f30048567b0e2cd797027e/packages/gatsby/src/utils/cache.ts
+[gatsby-remark-embedder]: https://github.com/MichaelDeBoey/gatsby-remark-embedder
+[instagram-oembed-docs]: https://developers.facebook.com/docs/instagram/oembed
+[kentcdodds]: https://github.com/KentCDodds
+[kentcdodds.com-remark-embedder-plugin]: https://github.com/kentcdodds/kentcdodds.com/blob/f114842e40b22d38b726f0a7fdaf8c21937eb2cc/plugins/remark-embedder/index.js
+[mdx-embed]: https://mdx-embed.com
+[michaeldeboey]: https://github.com/MichaelDeBoey
+[remark]: https://remark.js.org
+[twitter-oembed-docs]: https://developer.twitter.com/en/docs/twitter-api/v1/tweets/post-and-engage/api-reference/get-statuses-oembed
 <!-- prettier-ignore-end -->
