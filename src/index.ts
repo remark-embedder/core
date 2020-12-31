@@ -1,5 +1,5 @@
 import type {Parent, Literal} from 'unist'
-import type {Attacher, Transformer as UnifiedTransformer} from 'unified'
+import type {Plugin, Transformer as UnifiedTransformer} from 'unified'
 import parse5 from 'parse5'
 import fromParse5 from 'hast-util-from-parse5'
 import visit from 'unist-util-visit'
@@ -43,10 +43,10 @@ const getUrlString = (url: string): string | null => {
   }
 }
 
-const remarkEmbedder: Attacher<RemarkEmbedderOptions[]> = ({
+const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
   transformers,
   cache,
-}) => {
+}: RemarkEmbedderOptions) => {
   // convert the array of transformers to one with both the transformer and the config tuple
   const transformersAndConfig: Array<{
     transformer: Transformer<unknown>
@@ -56,7 +56,7 @@ const remarkEmbedder: Attacher<RemarkEmbedderOptions[]> = ({
     else return {transformer: t}
   })
 
-  return async tree => {
+  const remarkEmbedderBase: UnifiedTransformer = async tree => {
     const nodeAndURL: Array<{parentNode: Parent; url: string}> = []
 
     visit(tree, 'paragraph', (paragraphNode: Parent) => {
@@ -138,7 +138,9 @@ const remarkEmbedder: Attacher<RemarkEmbedderOptions[]> = ({
     await Promise.all(promises)
 
     return tree
-  } as UnifiedTransformer
+  }
+
+  return remarkEmbedderBase
 }
 
 export default remarkEmbedder
