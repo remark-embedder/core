@@ -56,7 +56,7 @@ const remarkEmbedder: Attacher<RemarkEmbedderOptions[]> = ({
     else return {transformer: t}
   })
 
-  const remarkEmbedderBase: UnifiedTransformer = async tree => {
+  return async tree => {
     const nodeAndURL: Array<{parentNode: Parent; url: string}> = []
 
     visit(tree, 'paragraph', (paragraphNode: Parent) => {
@@ -138,9 +138,7 @@ const remarkEmbedder: Attacher<RemarkEmbedderOptions[]> = ({
     await Promise.all(promises)
 
     return tree
-  }
-
-  return remarkEmbedderBase
+  } as UnifiedTransformer
 }
 
 export default remarkEmbedder
