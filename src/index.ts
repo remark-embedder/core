@@ -46,7 +46,7 @@ const getUrlString = (url: string): string | null => {
 const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
   transformers,
   cache,
-}: RemarkEmbedderOptions) => {
+}) => {
   // convert the array of transformers to one with both the transformer and the config tuple
   const transformersAndConfig: Array<{
     transformer: Transformer<unknown>
