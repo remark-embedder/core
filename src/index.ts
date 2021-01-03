@@ -110,6 +110,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
 
           if (!html) {
             html = await transformer.getHTML(url, config)
+            html = html?.trim() as GottenHTML
             await cache?.set(cacheKey, html)
           }
 
