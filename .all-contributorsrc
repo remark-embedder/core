@@ -62,6 +62,16 @@
       "contributions": [
         "review"
       ]
+    },
+    {
+      "login": "bradgarropy",
+      "name": "Brad Garropy",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/11336745?v=4",
+      "profile": "https://bradgarropy.com",
+      "contributions": [
+        "code",
+        "bug"
+      ]
     }
   ]
 }
