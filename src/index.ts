@@ -1,7 +1,7 @@
-import type {Parent, Literal} from 'unist'
-import type {Plugin, Transformer as UnifiedTransformer} from 'unified'
-import parse5 from 'parse5'
 import fromParse5 from 'hast-util-from-parse5'
+import parse5 from 'parse5'
+import type {Plugin} from 'unified'
+import type {Literal, Parent} from 'unist'
 import visit from 'unist-util-visit'
 
 type GottenHTML = string | null
@@ -12,14 +12,14 @@ type Transformer<ConfigType = unknown> = {
     url: string,
     config?: TransformerConfig<ConfigType>,
   ) => Promise<GottenHTML> | GottenHTML
-  shouldTransform: (url: string) => Promise<boolean> | boolean
   name: string
+  shouldTransform: (url: string) => Promise<boolean> | boolean
 }
 
 type RemarkEmbedderOptions = {
   cache?:
     | Map<string, GottenHTML>
-    // the gatsby cache is async, and we want to support that so:
+    // the Gatsby cache is async, and we want to support that so:
     | {
         get(key: string): Promise<GottenHTML>
         set(key: string, value: GottenHTML): Promise<void>
@@ -44,19 +44,18 @@ const getUrlString = (url: string): string | null => {
 }
 
 const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
-  transformers,
   cache,
+  transformers,
 }) => {
   // convert the array of transformers to one with both the transformer and the config tuple
   const transformersAndConfig: Array<{
-    transformer: Transformer<unknown>
     config?: TransformerConfig
-  }> = transformers.map(t => {
-    if (Array.isArray(t)) return {transformer: t[0], config: t[1]}
-    else return {transformer: t}
-  })
+    transformer: Transformer
+  }> = transformers.map(t =>
+    Array.isArray(t) ? {config: t[1], transformer: t[0]} : {transformer: t},
+  )
 
-  const remarkEmbedderBase: UnifiedTransformer = async tree => {
+  return async tree => {
     const nodeAndURL: Array<{parentNode: Parent; url: string}> = []
 
     visit(tree, 'paragraph', (paragraphNode: Parent) => {
@@ -115,16 +114,18 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
           }
 
           // if nothing's returned from getHTML, then no modifications are needed
-          if (!html) return
+          if (!html) {
+            return
+          }
 
           // convert the HTML string into an AST
           const htmlElement = htmlToHast(html)
 
           // set the parentNode.data with the necessary properties
           parentNode.data = {
+            hChildren: htmlElement.children,
             hName: htmlElement.tagName,
             hProperties: htmlElement.properties,
-            hChildren: htmlElement.children,
           }
         } catch (e: unknown) {
           // https://github.com/microsoft/TypeScript/issues/20024#issuecomment-344511199
@@ -140,12 +141,10 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
 
     return tree
   }
-
-  return remarkEmbedderBase
 }
 
 export default remarkEmbedder
-export type {Transformer, RemarkEmbedderOptions}
+export type {RemarkEmbedderOptions, Transformer}
 
 /*
 eslint
