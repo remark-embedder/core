@@ -11,7 +11,7 @@ type Transformer<ConfigType = unknown> = {
   getHTML: (
     url: string,
     config?: TransformerConfig<ConfigType>,
-  ) => Promise<GottenHTML> | GottenHTML
+  ) => GottenHTML | Promise<GottenHTML>
   name: string
   shouldTransform: (url: string) => Promise<boolean> | boolean
 }
@@ -25,7 +25,7 @@ type RemarkEmbedderOptions = {
         set(key: string, value: GottenHTML): Promise<void>
         [key: string]: unknown
       }
-  transformers: Array<[Transformer<any>, TransformerConfig] | Transformer<any>>
+  transformers: Array<Transformer<any> | [Transformer<any>, TransformerConfig]>
 }
 
 // results in an AST node of type "root" with a single "children" node of type "element"
@@ -64,7 +64,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
       }
 
       const {children} = paragraphNode
-      const node = children[0] as Parent & Literal
+      const node = children[0] as Literal & Parent
       const isText = node.type === 'text'
       // it's a valid link if there's no title, and the value is the same as the URL
       const isValidLink =

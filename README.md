@@ -55,7 +55,7 @@ parser). You provide a "transformer" the plugin does the rest.
 This module is distributed via [npm][npm] which is bundled with [node][node] and
 should be installed as one of your project's `dependencies`:
 
-```
+```shell
 npm install @remark-embedder/core
 ```
 
@@ -63,7 +63,7 @@ npm install @remark-embedder/core
 
 Here's the most complete, simplest, practical example I can offer:
 
-```javascript
+```js
 import remarkEmbedder from '@remark-embedder/core'
 // or, if you're using CJS:
 // const {default: remarkEmbedder} = require('@remark-embedder/core')
@@ -201,7 +201,7 @@ token to request the embed information like with
 
 Here's a simple example:
 
-```javascript
+```js
 const CodeSandboxTransformer = {
   name: 'CodeSandbox',
   shouldTransform(url) {
@@ -231,7 +231,7 @@ easily only offer an object. Personally, I think using the function gives the
 most flexibility for folks to configure the transform. In fact, I think a good
 pattern could be something like the following:
 
-```javascript
+```js
 const CodeSandboxTransformer = {
   name: 'CodeSandbox',
   shouldTransform(url) {
@@ -266,7 +266,7 @@ could even allow the config function to be `async`.
 
 Here's what our simple example would look like as a transformer module:
 
-```typescript
+```ts
 import type {Transformer} from '@remark-embedder/core'
 
 type Config = (url: string) => {height: string}
@@ -303,7 +303,7 @@ a `.default` to get your transformer with `require`.
 To take advantage of the config type you export, the user of your transform
 would need to cast their config when running it through remark. For example:
 
-```typescript
+```ts
 // ...
 import transformer from '@remark-embedder/transformer-codesandbox'
 import type {Config as CodesandboxConfig} from '@remark-embedder/transformer-codesandbox'
