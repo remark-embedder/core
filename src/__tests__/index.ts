@@ -1,12 +1,13 @@
 import remark from 'remark'
 import remarkHTML from 'remark-html'
+
 import remarkEmbedder from '../'
 import type {Transformer} from '../'
 
 // this removes the quotes around strings...
 const unquoteSerializer = {
-  print: (val: unknown) => (val as string).trim(),
-  test: (val: string) => typeof val === 'string',
+  serialize: (val: string) => val.trim(),
+  test: (val: unknown) => typeof val === 'string',
 }
 
 expect.addSnapshotSerializer(unquoteSerializer)
@@ -205,6 +206,5 @@ https://some-site.com/do-not-transform
 /*
 eslint
   @typescript-eslint/no-unsafe-assignment: "off",
-  @typescript-eslint/no-unsafe-member-access: "off",
-  @typescript-eslint/no-unsafe-call: "off"
+  @typescript-eslint/no-unsafe-member-access: "off"
 */
