@@ -232,6 +232,23 @@ test('can handle errors', async () => {
   consoleError.mockClear()
 })
 
+test('handleError can return null', async () => {
+  consoleError.mockImplementationOnce(() => {})
+  const transformer = getTransformer({
+    getHTML: () => Promise.reject(new Error('OH_NO_AN_ERROR_HAPPENED')),
+  })
+  const handleError = jest.fn(() => null)
+  const result = await remark()
+    .use(remarkEmbedder, {transformers: [transformer], handleError})
+    .use(remarkHTML)
+    .process(`[https://some-site.com](https://some-site.com)`)
+
+  expect(result.toString()).toMatchInlineSnapshot(
+    `<p><a href="https://some-site.com">https://some-site.com</a></p>`,
+  )
+  consoleError.mockClear()
+})
+
 // no idea why TS and remark aren't getting along here,
 // but I don't have time to look into it right now...
 /*
