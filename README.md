@@ -108,6 +108,8 @@ async function go() {
   // <p>This is a CodeSandbox:</p>
   // <iframe src="https://codesandbox.io/embed/css-variables-vs-themeprovider-df90h" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking" sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"></iframe>
 }
+
+go()
 ```
 
 ### Options
@@ -169,7 +171,56 @@ return `<div><blockquote>...</blockquote><a href="...">...</a></div>`
 Some services have endpoints that you can use to get the embed HTML ([like
 twitter for example][twitter-oembed-docs]).
 
-#### `cache: Map<string, string | null>`
+#### `handleError?: (errorInfo: ErrorInfo) => GottenHTML | Promise<GottenHTML>
+
+```ts
+type ErrorInfo = {
+  error: Error
+  url: string
+  transformer: Transformer<unknown>
+  config: TransformerConfig
+}
+```
+
+If remark-embedder encounters an error with any transformer, then compilation
+will fail. I've found this to be problematic when using
+[`@remark-embedder/transformer-oembed`][@remark-embedder/transformer-oembed] for
+tweets and the tweet author deletes their tweet. It'll prevent you from building
+and that's annoying.
+
+So `handleError` allows you to handle any error that's thrown by a transformer.
+This way you can gracefully fallback to something rather than crashing
+everything. Even if you provide a `handleError`, we'll log to the console so you
+can fix the problem in the future.
+
+Here's a quick example of an error handler that would handle deleted tweets:
+
+```typescript
+function handleError({error, url, transformer}) {
+  if (
+    transformer.name !== '@remark-embedder/transformer-oembed' ||
+    !url.includes('twitter.com')
+  ) {
+    // we're only handling errors from this specific transformer and the twitter URL
+    // so we'll rethrow errors from any other transformer/url
+    throw error
+  }
+  return `<p>Unable to embed <a href="${url}">this tweet</a>.</p>`
+}
+
+const result = await remark()
+  .use(remarkEmbedder, {
+    transformers: [oembedTransformer],
+    handleError,
+  })
+  .use(html)
+  .process(exampleMarkdown)
+```
+
+You'll get an error logged, but it won't break your build. It also won't be
+cached (if you're using the `cache` option).
+
+#### `cache?: Map<string, string | null>`
 
 **You'll mostly likely want to use
 [`@remark-embedder/cache`][@remark-embedder/cache]**
