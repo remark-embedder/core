@@ -26,6 +26,12 @@ type RemarkEmbedderOptions = {
         [key: string]: unknown
       }
   transformers: Array<Transformer<any> | [Transformer<any>, TransformerConfig]>
+  handleError?: (errorInfo: {
+    error: Error
+    url: string
+    transformer: Transformer<unknown>
+    config: TransformerConfig
+  }) => GottenHTML | Promise<GottenHTML>
 }
 
 // results in an AST node of type "root" with a single "children" node of type "element"
@@ -46,6 +52,7 @@ const getUrlString = (url: string): string | null => {
 const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
   cache,
   transformers,
+  handleError,
 }) => {
   // convert the array of transformers to one with both the transformer and the config tuple
   const transformersAndConfig: Array<{
@@ -103,14 +110,26 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
 
     const promises = nodesToTransform.map(
       async ({parentNode, url, transformer, config}) => {
+        const errorMessageBanner = `The following error occurred while processing \`${url}\` with the remark-embedder transformer \`${transformer.name}\`:`
         try {
           const cacheKey = `remark-embedder:${transformer.name}:${url}`
           let html: GottenHTML | undefined = await cache?.get(cacheKey)
 
           if (!html) {
-            html = await transformer.getHTML(url, config)
-            html = html?.trim() ?? null
-            await cache?.set(cacheKey, html)
+            try {
+              html = await transformer.getHTML(url, config)
+              html = html?.trim() ?? null
+              await cache?.set(cacheKey, html)
+            } catch (e: unknown) {
+              if (handleError) {
+                const error = e as Error
+                console.error(`${errorMessageBanner}\n\n${error.message}`)
+                html = await handleError({error, url, transformer, config})
+                html = html?.trim() ?? null
+              } else {
+                throw e
+              }
+            }
           }
 
           // if nothing's returned from getHTML, then no modifications are needed
@@ -128,9 +147,8 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
             hProperties: htmlElement.properties,
           }
         } catch (e: unknown) {
-          // https://github.com/microsoft/TypeScript/issues/20024#issuecomment-344511199
           const error = e as Error
-          error.message = `The following error occurred while processing \`${url}\` with the remark-embedder transformer \`${transformer.name}\`:\n\n${error.message}`
+          error.message = `${errorMessageBanner}\n\n${error.message}`
 
           throw error
         }

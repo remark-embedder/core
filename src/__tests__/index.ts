@@ -12,6 +12,12 @@ const unquoteSerializer = {
 
 expect.addSnapshotSerializer(unquoteSerializer)
 
+const consoleError = jest.spyOn(console, 'error')
+afterEach(() => {
+  expect(consoleError).not.toHaveBeenCalled()
+  consoleError.mockReset()
+})
+
 const getTransformer = <ConfigType>(
   overrides: Partial<Transformer<ConfigType>> = {},
 ): Transformer<ConfigType> => ({
@@ -199,6 +205,31 @@ https://some-site.com/do-not-transform
     <div>It changed!</div>
     <p>https://some-site.com/do-not-transform</p>
   `)
+})
+
+test('can handle errors', async () => {
+  consoleError.mockImplementationOnce(() => {})
+  const transformer = getTransformer({
+    getHTML: () => Promise.reject(new Error('OH_NO_AN_ERROR_HAPPENED')),
+  })
+  const handleError = jest.fn(({error}) => `<div>${error.message}</div>`)
+  const result = await remark()
+    .use(remarkEmbedder, {transformers: [transformer], handleError})
+    .use(remarkHTML)
+    .process(`[https://some-site.com](https://some-site.com)`)
+
+  expect(result.toString()).toMatchInlineSnapshot(
+    `<div>OH_NO_AN_ERROR_HAPPENED</div>`,
+  )
+
+  expect(consoleError).toHaveBeenCalledTimes(1)
+  expect(consoleError).toHaveBeenCalledWith(expect.any(String))
+  expect(consoleError.mock.calls[0][0]).toMatchInlineSnapshot(`
+    The following error occurred while processing \`https://some-site.com/\` with the remark-embedder transformer \`TEST\`:
+
+    OH_NO_AN_ERROR_HAPPENED
+  `)
+  consoleError.mockClear()
 })
 
 // no idea why TS and remark aren't getting along here,
