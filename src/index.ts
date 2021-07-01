@@ -16,6 +16,12 @@ type Transformer<ConfigType = unknown> = {
   shouldTransform: (url: string) => Promise<boolean> | boolean
 }
 
+type TransformerInfo = {
+  url: string
+  transformer: Transformer<unknown>
+  config: TransformerConfig
+}
+
 type RemarkEmbedderOptions = {
   cache?:
     | Map<string, GottenHTML>
@@ -28,11 +34,7 @@ type RemarkEmbedderOptions = {
   transformers: Array<Transformer<any> | [Transformer<any>, TransformerConfig]>
   handleHTML?: (
     html: GottenHTML,
-    info: {
-      url: string
-      transformer: Transformer<unknown>
-      config: TransformerConfig
-    },
+    info: TransformerInfo,
   ) => GottenHTML | Promise<GottenHTML>
   handleError?: (errorInfo: {
     error: Error
@@ -177,7 +179,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
 }
 
 export default remarkEmbedder
-export type {RemarkEmbedderOptions, Transformer}
+export type {RemarkEmbedderOptions, Transformer, TransformerInfo}
 
 /*
 eslint
