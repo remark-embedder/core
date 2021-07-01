@@ -207,6 +207,40 @@ https://some-site.com/do-not-transform
   `)
 })
 
+test('handleHTML returns html', async () => {
+  const transformer = getTransformer()
+  const handleHTML = jest.fn(html => `<div>${html}</div>`)
+  const result = await remark()
+    .use(remarkEmbedder, {transformers: [transformer], handleHTML})
+    .use(remarkHTML)
+    .process(`[https://some-site.com](https://some-site.com)`)
+
+  expect(result.toString()).toMatchInlineSnapshot(
+    `<div><iframe src="https://some-site.com/"></iframe></div>`,
+  )
+})
+
+test('handleHTML gets null', async () => {
+  const handleHTML = jest.fn(() => null)
+  const result = await remark()
+    .use(remarkEmbedder, {
+      transformers: [
+        {
+          name: 'No transform',
+          getHTML: () => null,
+          shouldTransform: () => true,
+        },
+      ],
+      handleHTML,
+    })
+    .use(remarkHTML)
+    .process(`[https://some-site.com](https://some-site.com)`)
+
+  expect(result.toString()).toMatchInlineSnapshot(
+    `<p><a href="https://some-site.com">https://some-site.com</a></p>`,
+  )
+})
+
 test('can handle errors', async () => {
   consoleError.mockImplementationOnce(() => {})
   const transformer = getTransformer({

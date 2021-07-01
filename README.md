@@ -171,7 +171,50 @@ return `<div><blockquote>...</blockquote><a href="...">...</a></div>`
 Some services have endpoints that you can use to get the embed HTML ([like
 twitter for example][twitter-oembed-docs]).
 
-#### `handleError?: (errorInfo: ErrorInfo) => GottenHTML | Promise<GottenHTML>
+#### `handleHTML?: (html: GottenHTML, info: TransformerInfo) => GottenHTML | Promise<GottenHTML>`
+
+Add optional HTML around what is returned by the transformer. This is useful
+for surrounding the returned HTML with custom HTML and classes.
+
+Here's a quick example of an HTML handler that would handle adding [TailwindCSS aspect ratio](https://github.com/tailwindlabs/tailwindcss-aspect-ratio) classes to YouTube videos:
+
+```typescript
+import remark from 'remark'
+import remarkEmbedder, { TransformerInfo } from '@remark-embedder/core'
+import oembedTransformer from '@remark-embedder/transformer-oembed'
+import remarkHtml from 'remark-html'
+
+const exampleMarkdown = `
+Check out this video:
+
+https://www.youtube.com/watch?v=dQw4w9WgXcQ
+`
+
+function handleHTML(html: string, info: TransformerInfo) {
+  const { url, transformer } = info
+  if (
+    transformer.name === '@remark-embedder/transformer-oembed'
+    || url.includes('youtube.com')
+  ) {
+    return `<div class="embed-youtube aspect-w-16 aspect-h-9">${html}</div>`
+  }
+  return html
+}
+
+const result = await remark()
+  .use(remarkEmbedder, {
+    transformers: [oembedTransformer],
+    handleHTML,
+  })
+  .use(remarkHtml)
+  .process(exampleMarkdown)
+
+  // This should return:
+  // <p>Check out this video:</p>
+  // <div class="embedded-youtube aspect-w-16 aspect-h-9"><iframe width="200" height="113" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+```
+
+#### `handleError?: (errorInfo: ErrorInfo) => GottenHTML | Promise<GottenHTML>`
 
 ```ts
 type ErrorInfo = {

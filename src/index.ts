@@ -16,6 +16,12 @@ type Transformer<ConfigType = unknown> = {
   shouldTransform: (url: string) => Promise<boolean> | boolean
 }
 
+type TransformerInfo = {
+  url: string
+  transformer: Transformer<unknown>
+  config: TransformerConfig
+}
+
 type RemarkEmbedderOptions = {
   cache?:
     | Map<string, GottenHTML>
@@ -26,6 +32,10 @@ type RemarkEmbedderOptions = {
         [key: string]: unknown
       }
   transformers: Array<Transformer<any> | [Transformer<any>, TransformerConfig]>
+  handleHTML?: (
+    html: GottenHTML,
+    info: TransformerInfo,
+  ) => GottenHTML | Promise<GottenHTML>
   handleError?: (errorInfo: {
     error: Error
     url: string
@@ -52,6 +62,7 @@ const getUrlString = (url: string): string | null => {
 const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
   cache,
   transformers,
+  handleHTML,
   handleError,
 }) => {
   // convert the array of transformers to one with both the transformer and the config tuple
@@ -120,6 +131,12 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
               html = await transformer.getHTML(url, config)
               html = html?.trim() ?? null
               await cache?.set(cacheKey, html)
+
+              // optional handleHTML transform function
+              if (handleHTML) {
+                html = await handleHTML(html, {url, transformer, config})
+                html = html?.trim() ?? null
+              }
             } catch (e: unknown) {
               if (handleError) {
                 const error = e as Error
@@ -162,7 +179,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
 }
 
 export default remarkEmbedder
-export type {RemarkEmbedderOptions, Transformer}
+export type {RemarkEmbedderOptions, Transformer, TransformerInfo}
 
 /*
 eslint
