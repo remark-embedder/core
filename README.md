@@ -171,7 +171,7 @@ return `<div><blockquote>...</blockquote><a href="...">...</a></div>`
 Some services have endpoints that you can use to get the embed HTML ([like
 twitter for example][twitter-oembed-docs]).
 
-#### `handleHTML?: (html: GottenHTML, info: { url: string, transformer: Transformer<unknown>, config: TransformerConfig }) => GottenHTML | Promise<GottenHTML>
+#### `handleHTML?: (html: GottenHTML, info: { url: string, transformer: Transformer<unknown>, config: TransformerConfig }) => GottenHTML | Promise<GottenHTML>`
 
 Add optional HTML around what is returned by the transformer. This is useful
 for surrounding the returned HTML with custom HTML and classes.
@@ -198,7 +198,7 @@ const result = await remark()
   .process(exampleMarkdown)
 ```
 
-#### `handleError?: (errorInfo: ErrorInfo) => GottenHTML | Promise<GottenHTML>
+#### `handleError?: (errorInfo: ErrorInfo) => GottenHTML | Promise<GottenHTML>`
 
 ```ts
 type ErrorInfo = {
