@@ -1,7 +1,7 @@
 import fromParse5 from 'hast-util-from-parse5'
 import parse5 from 'parse5'
 import type {Plugin} from 'unified'
-import type {Literal, Parent} from 'unist'
+import type {Link, Parent, Text} from 'mdast'
 import visit from 'unist-util-visit'
 
 type GottenHTML = string | null
@@ -82,19 +82,19 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
       }
 
       const {children} = paragraphNode
-      const node = children[0] as Literal & Parent
+      const node = children[0] as Link | Text
       const isText = node.type === 'text'
       // it's a valid link if there's no title, and the value is the same as the URL
       const isValidLink =
         node.type === 'link' &&
-        node.title === null &&
+        !node.title &&
         node.children.length === 1 &&
         node.children[0].value === node.url
       if (!isText && !isValidLink) {
         return
       }
 
-      const {url, value = url} = node
+      const {url, value = url} = node as Link
 
       const urlString = getUrlString(value as string)
       if (!urlString) {
@@ -104,7 +104,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
     })
 
     const nodesToTransform: Array<
-      typeof nodeAndURL[0] & typeof transformersAndConfig[0]
+      typeof nodeAndURL[number] & typeof transformersAndConfig[number]
     > = []
 
     for (const node of nodeAndURL) {
