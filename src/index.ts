@@ -1,7 +1,8 @@
+import type {Element, Root} from 'hast'
 import fromParse5 from 'hast-util-from-parse5'
 import parse5 from 'parse5'
 import type {Plugin} from 'unified'
-import type {Link, Parent, Text} from 'mdast'
+import type {Link, Paragraph, Text} from 'mdast'
 import visit from 'unist-util-visit'
 
 type GottenHTML = string | null
@@ -46,8 +47,8 @@ type RemarkEmbedderOptions = {
 
 // results in an AST node of type "root" with a single "children" node of type "element"
 // so we return the first (and only) child "element" node
-const htmlToHast = (string: string): Parent =>
-  (fromParse5(parse5.parseFragment(string)) as Parent).children[0] as Parent
+const htmlToHast = (string: string): Element =>
+  (fromParse5(parse5.parseFragment(string)) as Root).children[0] as Element
 
 const getUrlString = (url: string): string | null => {
   const urlString = url.startsWith('http') ? url : `https://${url}`
@@ -74,9 +75,9 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
   )
 
   return async tree => {
-    const nodeAndURL: Array<{parentNode: Parent; url: string}> = []
+    const nodeAndURL: Array<{parentNode: Paragraph; url: string}> = []
 
-    visit(tree, 'paragraph', (paragraphNode: Parent) => {
+    visit(tree, 'paragraph', (paragraphNode: Paragraph) => {
       if (paragraphNode.children.length !== 1) {
         return
       }
@@ -89,14 +90,13 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
         node.type === 'link' &&
         !node.title &&
         node.children.length === 1 &&
-        node.children[0].value === node.url
-      if (!isText && !isValidLink) {
+        (node.children[0] as Text).value === node.url
+      if (!(isText || isValidLink)) {
         return
       }
 
-      const {url, value = url} = node as Link
-
-      const urlString = getUrlString(value as string)
+      const value = isText ? (node as Text).value : (node as Link).url
+      const urlString = getUrlString(value)
       if (!urlString) {
         return
       }
