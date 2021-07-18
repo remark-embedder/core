@@ -100,7 +100,13 @@ That's just a regular link
 
 And so is this: [neat](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
-[This has a title, so it's not transformed](https://some-site.com)
+[This text is not the same as the url, so it's not transformed](https://some-site.com)
+
+[https://some-site.com](https://some-site.com "This one has a title, so it's not transformed")
+
+This one has an emphasised text, so it's not transformed:
+
+[**https://some-site.com**](https://some-site.com)
       `.trim(),
     )
 

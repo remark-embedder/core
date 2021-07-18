@@ -90,7 +90,8 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
         node.type === 'link' &&
         !node.title &&
         node.children.length === 1 &&
-        (node.children[0] as Text).value === node.url
+        node.children[0].type === 'text' &&
+        node.children[0].value === node.url
       if (!(isText || isValidLink)) {
         return
       }
