@@ -16,7 +16,7 @@ jobs:
     if: ${{ !contains(github.head_ref, 'all-contributors') }}
     strategy:
       matrix:
-        node: [10.13, 12, 14, 16]
+        node: [10.13, 12, 14, 16, 17]
     runs-on: ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -58,7 +58,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 16
 
       - name: 📥 Download deps
         uses: bahmutov/npm-install@v1
@@ -71,7 +71,7 @@ jobs:
       - name: 🚀 Release
         uses: cycjimmy/semantic-release-action@v2
         with:
-          semantic_version: 17
+          semantic_version: 18
           branches: |
             [
               '+([0-9])?(.{+([0-9]),x}).x',
