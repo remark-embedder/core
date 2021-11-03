@@ -96,7 +96,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
         return
       }
 
-      const value = isText ? (node as Text).value : (node as Link).url
+      const value = isText ? node.value : node.url
       const urlString = getUrlString(value)
       if (!urlString) {
         return

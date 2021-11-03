@@ -31,7 +31,7 @@ test('smoke test', async () => {
   const transformer = getTransformer()
   const result = await remark()
     .use(remarkEmbedder, {transformers: [transformer]})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(
       `
 This is a great site:
@@ -50,7 +50,7 @@ test('works with same name as link links', async () => {
   const transformer = getTransformer()
   const result = await remark()
     .use(remarkEmbedder, {transformers: [transformer]})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -64,7 +64,7 @@ test('requests are cached', async () => {
   const getHTMLMock = transformer.getHTML as jest.Mock
   await remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process('https://some-site.com')
 
   expect(getHTMLMock).toHaveBeenCalledTimes(1)
@@ -72,7 +72,7 @@ test('requests are cached', async () => {
 
   await remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process('https://some-site.com')
 
   expect(getHTMLMock).not.toHaveBeenCalled()
@@ -83,7 +83,7 @@ test(`does nothing with markdown that doesn't match`, async () => {
   const transformer = getTransformer()
   const result = await remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(
       `
 # This is
@@ -132,7 +132,7 @@ test('error messages are handy', async () => {
         },
       ],
     })
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(`https://some-site.com/error`)
     .catch(e => e)
 
@@ -154,7 +154,7 @@ test('transformers can change their mind by returning null', async () => {
         },
       ],
     })
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process('https://some-site.com/no-change')
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -181,7 +181,7 @@ test('transformers can be configured', async () => {
     .use(remarkEmbedder, {
       transformers: [[transformer, config as TConfig]],
     })
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process('some-site.com/config')
 
   expect(transformer.getHTML).toHaveBeenCalledWith(
@@ -201,7 +201,7 @@ test('shouldTransform can be async', async () => {
     .use(remarkEmbedder, {
       transformers: [transformer],
     })
-    .use(remarkHTML).process(`
+    .use(remarkHTML, {sanitize: false}).process(`
 https://some-site.com/transform-me
 
 https://some-site.com/do-not-transform
@@ -218,7 +218,7 @@ test('handleHTML returns html', async () => {
   const handleHTML = jest.fn(html => `<div>${html}</div>`)
   const result = await remark()
     .use(remarkEmbedder, {transformers: [transformer], handleHTML})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -239,7 +239,7 @@ test('handleHTML gets null', async () => {
       ],
       handleHTML,
     })
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -255,7 +255,7 @@ test('can handle errors', async () => {
   const handleError = jest.fn(({error}) => `<div>${error.message}</div>`)
   const result = await remark()
     .use(remarkEmbedder, {transformers: [transformer], handleError})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -280,7 +280,7 @@ test('handleError can return null', async () => {
   const handleError = jest.fn(() => null)
   const result = await remark()
     .use(remarkEmbedder, {transformers: [transformer], handleError})
-    .use(remarkHTML)
+    .use(remarkHTML, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
