@@ -42,7 +42,7 @@
     "@types/hast": "^2.3.4",
     "@types/mdast": "^3.0.10",
     "hast-util-from-parse5": "^6.0.1",
-    "parse5": "^6.0.1",
+    "parse5": "^7.0.0",
     "unified": "^9.2.2",
     "unist-util-visit": "^2.0.3"
   },
