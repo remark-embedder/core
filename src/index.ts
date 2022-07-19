@@ -1,9 +1,6 @@
 import type {Element, Root} from 'hast'
-import {fromParse5} from 'hast-util-from-parse5'
-import * as parse5 from 'parse5'
 import type {Plugin} from 'unified'
 import type {Link, Paragraph, Text} from 'mdast'
-import {visit} from 'unist-util-visit'
 
 type GottenHTML = string | null
 type TransformerConfig<Type = unknown> = Type
@@ -47,8 +44,12 @@ type RemarkEmbedderOptions = {
 
 // results in an AST node of type "root" with a single "children" node of type "element"
 // so we return the first (and only) child "element" node
-const htmlToHast = (string: string): Element =>
-  (fromParse5(parse5.parseFragment(string)) as Root).children[0] as Element
+const htmlToHast = async (string: string): Promise<Element> => {
+  const {fromParse5} = await import('hast-util-from-parse5')
+  const parse5 = await import('parse5')
+  return (fromParse5(parse5.parseFragment(string)) as Root)
+    .children[0] as Element
+}
 
 const getUrlString = (url: string): string | null => {
   const urlString = url.startsWith('http') ? url : `https://${url}`
@@ -75,6 +76,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
   )
 
   return async tree => {
+    const {visit} = await import('unist-util-visit')
     const nodeAndURL: Array<{parentNode: Paragraph; url: string}> = []
 
     visit(tree, 'paragraph', (paragraphNode: Paragraph) => {
@@ -156,7 +158,7 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
           }
 
           // convert the HTML string into an AST
-          const htmlElement = htmlToHast(html)
+          const htmlElement = await htmlToHast(html)
 
           // set the parentNode.data with the necessary properties
           parentNode.data = {

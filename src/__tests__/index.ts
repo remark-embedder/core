@@ -1,6 +1,5 @@
-import {remark} from 'remark'
-import remarkHTML from 'remark-html'
-
+import {afterEach, expect, vi, test} from 'vitest'
+import type {Mock} from 'vitest'
 import remarkEmbedder from '../'
 import type {Transformer} from '../'
 
@@ -12,7 +11,7 @@ const unquoteSerializer = {
 
 expect.addSnapshotSerializer(unquoteSerializer)
 
-const consoleError = jest.spyOn(console, 'error')
+const consoleError = vi.spyOn(console, 'error')
 afterEach(() => {
   expect(consoleError).not.toHaveBeenCalled()
   consoleError.mockReset()
@@ -22,16 +21,19 @@ const getTransformer = <ConfigType>(
   overrides: Partial<Transformer<ConfigType>> = {},
 ): Transformer<ConfigType> => ({
   name: 'TEST',
-  shouldTransform: jest.fn(url => url.startsWith('https://some-site.com')),
-  getHTML: jest.fn(url => `<iframe src="${url}"></iframe>`),
+  shouldTransform: vi.fn(url => url.startsWith('https://some-site.com')),
+  getHTML: vi.fn(url => `<iframe src="${url}"></iframe>`),
   ...overrides,
 })
 
 test('smoke test', async () => {
   const transformer = getTransformer()
-  const result = await remark()
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {transformers: [transformer]})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(
       `
 This is a great site:
@@ -48,9 +50,12 @@ https://some-site.com
 
 test('works with same name as link links', async () => {
   const transformer = getTransformer()
-  const result = await remark()
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {transformers: [transformer]})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -61,18 +66,24 @@ test('works with same name as link links', async () => {
 test('requests are cached', async () => {
   const myCache = new Map()
   const transformer = getTransformer()
-  const getHTMLMock = transformer.getHTML as jest.Mock
-  await remark()
+  const getHTMLMock = transformer.getHTML as Mock
+  await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process('https://some-site.com')
 
   expect(getHTMLMock).toHaveBeenCalledTimes(1)
   getHTMLMock.mockClear()
 
-  await remark()
+  await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process('https://some-site.com')
 
   expect(getHTMLMock).not.toHaveBeenCalled()
@@ -81,9 +92,12 @@ test('requests are cached', async () => {
 test(`does nothing with markdown that doesn't match`, async () => {
   const myCache = new Map()
   const transformer = getTransformer()
-  const result = await remark()
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(
       `
 # This is
@@ -120,7 +134,10 @@ This one has an emphasised text, so it's not transformed:
 })
 
 test('error messages are handy', async () => {
-  const error = await remark()
+  const error = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {
       transformers: [
         {
@@ -132,7 +149,7 @@ test('error messages are handy', async () => {
         },
       ],
     })
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(`https://some-site.com/error`)
     .catch(e => e)
 
@@ -144,7 +161,10 @@ test('error messages are handy', async () => {
 })
 
 test('transformers can change their mind by returning null', async () => {
-  const result = await remark()
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {
       transformers: [
         {
@@ -154,7 +174,7 @@ test('transformers can change their mind by returning null', async () => {
         },
       ],
     })
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process('https://some-site.com/no-change')
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -170,18 +190,21 @@ test('transformers can be configured', async () => {
   const transformer: Transformer<TConfig> = {
     name: 'TEST',
     shouldTransform: () => true,
-    getHTML: jest.fn(
+    getHTML: vi.fn(
       (url, config = getDefaultConfig) =>
         `<div>${config(url).some} for ${url}</div>`,
     ),
   }
 
   const config = () => ({some: 'config'})
-  await remark()
+  await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {
       transformers: [[transformer, config as TConfig]],
     })
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process('some-site.com/config')
 
   expect(transformer.getHTML).toHaveBeenCalledWith(
@@ -192,16 +215,19 @@ test('transformers can be configured', async () => {
 
 test('shouldTransform can be async', async () => {
   const transformer = getTransformer({
-    shouldTransform: jest.fn(url =>
+    shouldTransform: vi.fn(url =>
       Promise.resolve(url.endsWith('transform-me')),
     ),
     getHTML: () => `<div>It changed!</div>`,
   })
-  const result = await remark()
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {
       transformers: [transformer],
     })
-    .use(remarkHTML, {sanitize: false}).process(`
+    .use((await import('remark-html')).default, {sanitize: false}).process(`
 https://some-site.com/transform-me
 
 https://some-site.com/do-not-transform
@@ -215,10 +241,13 @@ https://some-site.com/do-not-transform
 
 test('handleHTML returns html', async () => {
   const transformer = getTransformer()
-  const handleHTML = jest.fn(html => `<div>${html}</div>`)
-  const result = await remark()
+  const handleHTML = vi.fn(html => `<div>${html}</div>`)
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {transformers: [transformer], handleHTML})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -227,8 +256,11 @@ test('handleHTML returns html', async () => {
 })
 
 test('handleHTML gets null', async () => {
-  const handleHTML = jest.fn(() => null)
-  const result = await remark()
+  const handleHTML = vi.fn(() => null)
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {
       transformers: [
         {
@@ -239,7 +271,7 @@ test('handleHTML gets null', async () => {
       ],
       handleHTML,
     })
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -252,10 +284,13 @@ test('can handle errors', async () => {
   const transformer = getTransformer({
     getHTML: () => Promise.reject(new Error('OH_NO_AN_ERROR_HAPPENED')),
   })
-  const handleError = jest.fn(({error}) => `<div>${error.message}</div>`)
-  const result = await remark()
+  const handleError = vi.fn(({error}) => `<div>${error.message}</div>`)
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {transformers: [transformer], handleError})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
@@ -277,10 +312,13 @@ test('handleError can return null', async () => {
   const transformer = getTransformer({
     getHTML: () => Promise.reject(new Error('OH_NO_AN_ERROR_HAPPENED')),
   })
-  const handleError = jest.fn(() => null)
-  const result = await remark()
+  const handleError = vi.fn(() => null)
+  const result = await (
+    await import('remark')
+  )
+    .remark()
     .use(remarkEmbedder, {transformers: [transformer], handleError})
-    .use(remarkHTML, {sanitize: false})
+    .use((await import('remark-html')).default, {sanitize: false})
     .process(`[https://some-site.com](https://some-site.com)`)
 
   expect(result.toString()).toMatchInlineSnapshot(
