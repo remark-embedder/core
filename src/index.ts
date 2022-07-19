@@ -1,9 +1,9 @@
 import type {Element, Root} from 'hast'
-import fromParse5 from 'hast-util-from-parse5'
-import parse5 from 'parse5'
+import {fromParse5} from 'hast-util-from-parse5'
+import * as parse5 from 'parse5'
 import type {Plugin} from 'unified'
 import type {Link, Paragraph, Text} from 'mdast'
-import visit from 'unist-util-visit'
+import {visit} from 'unist-util-visit'
 
 type GottenHTML = string | null
 type TransformerConfig<Type = unknown> = Type

@@ -1,4 +1,4 @@
-import remark from 'remark'
+import {remark} from 'remark'
 import remarkHTML from 'remark-html'
 
 import remarkEmbedder from '../'
