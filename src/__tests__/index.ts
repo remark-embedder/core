@@ -279,6 +279,37 @@ test('handleHTML gets null', async () => {
   )
 })
 
+test('handleHTML works when requests are cached', async () => {
+  const myCache = new Map()
+  const transformer = getTransformer()
+  const getHTMLMock = transformer.getHTML as Mock
+  await (
+    await import('remark')
+  )
+    .remark()
+    .use(remarkEmbedder, {cache: myCache, transformers: [transformer]})
+    .use((await import('remark-html')).default, {sanitize: false})
+    .process('https://some-site.com')
+
+  expect(getHTMLMock).toHaveBeenCalledTimes(1)
+  getHTMLMock.mockClear()
+
+  const handleHTML = vi.fn(html => `<div>${html}</div>`)
+  const result = await (
+    await import('remark')
+  )
+    .remark()
+    .use(remarkEmbedder, {cache: myCache, transformers: [transformer], handleHTML})
+    .use((await import('remark-html')).default, {sanitize: false})
+    .process(`[https://some-site.com](https://some-site.com)`)
+
+  expect(result.toString()).toMatchInlineSnapshot(
+    `<div><iframe src="https://some-site.com/"></iframe></div>`,
+  )
+
+  expect(getHTMLMock).not.toHaveBeenCalled()
+})
+
 test('can handle errors', async () => {
   consoleError.mockImplementationOnce(() => {})
   const transformer = getTransformer({
