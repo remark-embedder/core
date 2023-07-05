@@ -129,26 +129,26 @@ const remarkEmbedder: Plugin<[RemarkEmbedderOptions]> = ({
           const cacheKey = `remark-embedder:${transformer.name}:${url}`
           let html: GottenHTML | undefined = await cache?.get(cacheKey)
 
-          if (!html) {
-            try {
+          try {
+            if (!html) {
               html = await transformer.getHTML(url, config)
               html = html?.trim() ?? null
               await cache?.set(cacheKey, html)
+            }
 
-              // optional handleHTML transform function
-              if (handleHTML) {
-                html = await handleHTML(html, {url, transformer, config})
-                html = html?.trim() ?? null
-              }
-            } catch (e: unknown) {
-              if (handleError) {
-                const error = e as Error
-                console.error(`${errorMessageBanner}\n\n${error.message}`)
-                html = await handleError({error, url, transformer, config})
-                html = html?.trim() ?? null
-              } else {
-                throw e
-              }
+            // optional handleHTML transform function
+            if (handleHTML) {
+              html = await handleHTML(html, {url, transformer, config})
+              html = html?.trim() ?? null
+            }
+          } catch (e: unknown) {
+            if (handleError) {
+              const error = e as Error
+              console.error(`${errorMessageBanner}\n\n${error.message}`)
+              html = await handleError({error, url, transformer, config})
+              html = html?.trim() ?? null
+            } else {
+              throw e
             }
           }
 
