@@ -1,7 +1,5 @@
-import {afterEach, expect, vi, test} from 'vitest'
-import type {Mock} from 'vitest'
-import remarkEmbedder from '../'
-import type {Transformer} from '../'
+import {afterEach, expect, vi, test, type Mock} from 'vitest'
+import remarkEmbedder, {type Transformer} from '../'
 
 // this removes the quotes around strings...
 const unquoteSerializer = {
