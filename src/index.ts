@@ -1,6 +1,6 @@
-import type {Element, Root} from 'hast'
-import type {Plugin} from 'unified'
-import type {Link, Paragraph, Text} from 'mdast'
+import {type Element, type Root} from 'hast'
+import {type Plugin} from 'unified'
+import {type Link, type Paragraph, type Text} from 'mdast'
 
 type GottenHTML = string | null
 type TransformerConfig<Type = unknown> = Type
