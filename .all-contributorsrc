@@ -83,6 +83,18 @@
         "test",
         "doc"
       ]
+    },
+    {
+      "login": "mono0x",
+      "name": "mono",
+      "avatar_url": "https://avatars.githubusercontent.com/u/231380?v=4",
+      "profile": "https://blog.mono0x.net/",
+      "contributions": [
+        "code",
+        "test"
+      ]
     }
-  ]
+  ],
+  "commitType": "docs",
+  "commitConvention": "angular"
 }
