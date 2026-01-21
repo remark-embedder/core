@@ -50,7 +50,7 @@
     "@types/jest": "^29.5.12",
     "@vitest/coverage-v8": "^1.6.0",
     "c8": "^9.1.0",
-    "kcd-scripts": "^15.0.1",
+    "kcd-scripts": "^16.0.0",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
     "typescript": "^5.4.5",
